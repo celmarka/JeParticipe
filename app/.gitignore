@@ -1,48 +1,9 @@
-# Fichiers générés par Android Studio
 *.iml
 .gradle/
 .idea/
+local.properties
 .DS_Store
 /build/
 /captures/
-.externalNativeBuild/
-.cxx/
-*.hprof
-*.lock
-
-# Fichiers locaux de configuration (sensible !)
-local.properties
-keystore.properties
-secrets.properties
-google-services.json
-
-# Fichiers de build
 app/build/
-module/build/
-*/build/
-
-# Fichiers de logs
-*.log
-
-# Fichiers temporaires
-*.tmp
-*.temp
-
-# Fichiers de backup
-*.bak
-*.backup
-
-# Fichiers de versionnement
-*.swp
-*.swo
-*~
-
-# Fichiers macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Fichiers Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
+google-services.json
