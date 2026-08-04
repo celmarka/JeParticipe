@@ -12,7 +12,6 @@ import retrofit2.HttpException
 class AuthRepository(
     private val sessionManager: SessionManager
 ) {
-    // API sans authentification (login, register)
     private val apiService = RetrofitClient.apiService
 
     suspend fun login(email: String, password: String): LoginResponse {
@@ -52,19 +51,15 @@ class AuthRepository(
         }
     }
 
-    // ✅ Changer le mot de passe - AVEC AUTHENTIFICATION
     suspend fun changePassword(oldPassword: String, newPassword: String): Boolean {
         return try {
-            // ⚠️ IMPORTANT: Utiliser getAuthenticatedApi pour avoir le token
             val api = RetrofitClient.getAuthenticatedApi(sessionManager)
-
             val response = api.changePassword(
                 ChangePasswordRequest(
                     oldPassword = oldPassword,
                     newPassword = newPassword
                 )
             )
-
             println("✅ Mot de passe changé avec succès pour: ${response.email}")
             true
         } catch (e: HttpException) {
@@ -77,5 +72,10 @@ class AuthRepository(
             e.printStackTrace()
             false
         }
+    }
+
+    // ✅ Récupérer l'ID de l'utilisateur connecté via SessionManager
+    fun getCurrentUserId(): Long? {
+        return sessionManager.getUserId()
     }
 }

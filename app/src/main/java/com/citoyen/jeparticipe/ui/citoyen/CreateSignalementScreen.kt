@@ -176,7 +176,7 @@ fun CreateSignalementScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A237E)),
                 shape = RoundedCornerShape(5.dp)
             ) {
-                Text("Retour", color = Color.White)
+                Text("<<", color = Color.White)
             }
         }
 

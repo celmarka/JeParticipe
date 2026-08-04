@@ -27,7 +27,7 @@ import com.citoyen.jeparticipe.data.model.Signalement
 import com.citoyen.jeparticipe.ui.agent.StatusBadge
 import com.citoyen.jeparticipe.utils.DateUtils
 
-// ✅ Fonction utilitaire (copiée ici pour l’autonomie)
+// Fonction utilitaire pour décoder Base64 en ImageBitmap
 fun decodeBase64ToImageBitmapAdmin(base64String: String?): ImageBitmap? {
     if (base64String.isNullOrEmpty()) return null
     return try {
@@ -44,7 +44,8 @@ fun AdminSignalementCard(
     signalement: Signalement,
     onUpdateStatut: (String) -> Unit,
     onCommentairesClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onAssignClick: () -> Unit
 ) {
     var showDetailsDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -131,6 +132,24 @@ fun AdminSignalementCard(
                     )
                 }
 
+                // ✅ AFFICHAGE DE L'AGENT ASSIGNÉ
+                val agent = signalement.agent
+                if (agent != null) {
+                    Text(
+                        text = "👤 Agent: ${agent.prenom} ${agent.nom} (${agent.email})",
+                        fontSize = 12.sp,
+                        color = Color(0xFF42A5F5),
+                        fontWeight = FontWeight.Medium
+                    )
+                } else {
+                    Text(
+                        text = "👤 Non assigné",
+                        fontSize = 12.sp,
+                        color = Color(0xFFFFA726),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
                 if (!signalement.dateCreation.isNullOrEmpty()) {
                     Text(
                         text = "📅 ${DateUtils.formatDate(signalement.dateCreation)}",
@@ -142,7 +161,7 @@ fun AdminSignalementCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Actions (inchangé)
+            // Actions selon statut (inchangé)
             when (signalement.statut?.uppercase()) {
                 "EN_ATTENTE" -> {
                     Column(
@@ -152,6 +171,18 @@ fun AdminSignalementCard(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+                            Button(
+                                onClick = { onAssignClick() },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF7E57C2)
+                                )
+                            ) {
+//                                Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Assigne", fontSize = 10.sp, color = Color.White)
+                            }
                             Button(
                                 onClick = { onUpdateStatut("EN_COURS") },
                                 modifier = Modifier.weight(1f),
@@ -179,12 +210,7 @@ fun AdminSignalementCard(
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(10.dp)
                             ) {
-                                Icon(
-                                    Icons.Default.Info,
-                                    contentDescription = "Détails",
-                                    modifier = Modifier.size(16.dp),
-                                    tint = Color(0xFF1A237E)
-                                )
+                                Icon(Icons.Default.Info, contentDescription = "Détails", modifier = Modifier.size(16.dp), tint = Color(0xFF1A237E))
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text("Plus", fontSize = 9.sp)
                             }
@@ -199,16 +225,9 @@ fun AdminSignalementCard(
                                 onClick = { showDeleteDialog = true },
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(10.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = Color(0xFFEF5350)
-                                )
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF5350))
                             ) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = "Supprimer",
-                                    modifier = Modifier.size(16.dp),
-                                    tint = Color(0xFFEF5350)
-                                )
+                                Icon(Icons.Default.Delete, contentDescription = "Supprimer", modifier = Modifier.size(16.dp), tint = Color(0xFFEF5350))
                             }
                         }
                     }
@@ -221,6 +240,18 @@ fun AdminSignalementCard(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+                            Button(
+                                onClick = { onAssignClick() },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF7E57C2)
+                                )
+                            ) {
+//                                Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Réassigne", fontSize = 8.sp, color = Color.White)
+                            }
                             Button(
                                 onClick = { onUpdateStatut("RESOLU") },
                                 modifier = Modifier.weight(1f),
@@ -248,12 +279,7 @@ fun AdminSignalementCard(
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(10.dp)
                             ) {
-                                Icon(
-                                    Icons.Default.Info,
-                                    contentDescription = "Détails",
-                                    modifier = Modifier.size(16.dp),
-                                    tint = Color(0xFF1A237E)
-                                )
+                                Icon(Icons.Default.Info, contentDescription = "Détails", modifier = Modifier.size(16.dp), tint = Color(0xFF1A237E))
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text("Détails", fontSize = 12.sp)
                             }
@@ -268,16 +294,9 @@ fun AdminSignalementCard(
                                 onClick = { showDeleteDialog = true },
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(10.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = Color(0xFFEF5350)
-                                )
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF5350))
                             ) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = "Supprimer",
-                                    modifier = Modifier.size(16.dp),
-                                    tint = Color(0xFFEF5350)
-                                )
+                                Icon(Icons.Default.Delete, contentDescription = "Supprimer", modifier = Modifier.size(16.dp), tint = Color(0xFFEF5350))
                             }
                         }
                     }
@@ -314,17 +333,24 @@ fun AdminSignalementCard(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+                            Button(
+                                onClick = { onAssignClick() },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF7E57C2)
+                                )
+                            ) {
+                                Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Assigner", fontSize = 12.sp, color = Color.White)
+                            }
                             OutlinedButton(
                                 onClick = { showDetailsDialog = true },
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(10.dp)
                             ) {
-                                Icon(
-                                    Icons.Default.Info,
-                                    contentDescription = "Détails",
-                                    modifier = Modifier.size(16.dp),
-                                    tint = Color(0xFF1A237E)
-                                )
+                                Icon(Icons.Default.Info, contentDescription = "Détails", modifier = Modifier.size(16.dp), tint = Color(0xFF1A237E))
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text("Détails", fontSize = 12.sp)
                             }
@@ -339,16 +365,9 @@ fun AdminSignalementCard(
                                 onClick = { showDeleteDialog = true },
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(10.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = Color(0xFFEF5350)
-                                )
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF5350))
                             ) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = "Supprimer",
-                                    modifier = Modifier.size(16.dp),
-                                    tint = Color(0xFFEF5350)
-                                )
+                                Icon(Icons.Default.Delete, contentDescription = "Supprimer", modifier = Modifier.size(16.dp), tint = Color(0xFFEF5350))
                             }
                         }
                     }
@@ -357,7 +376,7 @@ fun AdminSignalementCard(
         }
     }
 
-    // ✅ Dialog de confirmation suppression
+    // Dialog suppression
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -404,7 +423,7 @@ fun AdminSignalementCard(
         )
     }
 
-    // ✅ Dialog des détails ADMIN avec photo
+    // Dialog détails
     if (showDetailsDialog) {
         AdminSignalementDetailsDialog(
             signalement = signalement,
@@ -413,7 +432,7 @@ fun AdminSignalementCard(
     }
 }
 
-// ✅ Dialog des détails ADMIN (avec affichage de la photo)
+// Dialog détails ADMIN avec affichage de l'agent assigné
 @Composable
 fun AdminSignalementDetailsDialog(
     signalement: Signalement,
@@ -481,6 +500,14 @@ fun AdminSignalementDetailsDialog(
                     )
                     HorizontalDivider()
 
+                    // ✅ AFFICHAGE DE L'AGENT ASSIGNÉ DANS LES DÉTAILS
+                    val agent = signalement.agent
+                    DetailRowAdmin(
+                        label = "Agent assigné",
+                        value = if (agent != null) "${agent.prenom} ${agent.nom} (${agent.email})" else "Aucun agent assigné"
+                    )
+                    HorizontalDivider()
+
                     DetailRowAdmin(
                         label = "Latitude",
                         value = signalement.latitude?.toString() ?: "Non spécifiée"
@@ -506,7 +533,7 @@ fun AdminSignalementDetailsDialog(
                         HorizontalDivider()
                     }
 
-                    // ✅ AFFICHAGE DE LA PHOTO
+                    // Affichage de la photo
                     if (!signalement.photo.isNullOrEmpty()) {
                         val imageBitmap = decodeBase64ToImageBitmapAdmin(signalement.photo)
                         if (imageBitmap != null) {

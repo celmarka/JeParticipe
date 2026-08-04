@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.citoyen.jeparticipe.data.model.Signalement
-import com.citoyen.jeparticipe.data.model.User
 import com.citoyen.jeparticipe.ui.common.CommentairesDialog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -34,11 +33,16 @@ fun AdminHomeScreen(
     var selectedSignalement by remember { mutableStateOf<Signalement?>(null) }
     var selectedFilter by remember { mutableStateOf<String?>(null) }
     var showLogoutDialog by remember { mutableStateOf(false) }
-    var showProfileDialog by remember { mutableStateOf(false) }  // ✅ AJOUT
+    var showProfileDialog by remember { mutableStateOf(false) }
+
+    var showAssignDialog by remember { mutableStateOf(false) }
+    var selectedSignalementForAssign by remember { mutableStateOf<Signalement?>(null) }
+    var selectedAgentId by remember { mutableStateOf<Long?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.chargerSignalements()
         viewModel.chargerUtilisateurs()
+        viewModel.chargerAgents()
     }
 
     val stats = viewModel.getStats()
@@ -52,150 +56,70 @@ fun AdminHomeScreen(
         else -> viewModel.signalements
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-    ) {
-        // En-tête
+    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
+        // En-tête (simplifié)
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xFF1A237E)
-            ),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A237E)),
             shape = RoundedCornerShape(0.dp)
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(
-                        text = "👑 Admin",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        fontSize = 18.sp
-                    )
-                    Text(
-                        text = "Gestion complète",
-                        color = Color.White.copy(alpha = 0.7f),
-                        fontSize = 12.sp
-                    )
+                    Text("👑 Admin", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("Gestion complète", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
                 }
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // ✅ BOUTON PROFIL
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     IconButton(
                         onClick = { showProfileDialog = true },
-                        modifier = Modifier
-                            .size(38.dp)
-                            .background(
-                                Color.White.copy(alpha = 0.2f),
-                                RoundedCornerShape(10.dp)
-                            )
+                        modifier = Modifier.size(38.dp).background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
                     ) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = "Profil",
-                            tint = Color.White
-                        )
+                        Icon(Icons.Default.Person, contentDescription = "Profil", tint = Color.White)
                     }
-
                     Button(
                         onClick = { showLogoutDialog = true },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFEBEE).copy(alpha = 0.2f)
-                        ),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFEBEE).copy(alpha = 0.2f)),
                         shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier
-                            .height(38.dp)
-                            .width(120.dp)
+                        modifier = Modifier.height(38.dp).width(120.dp)
                     ) {
-                        Icon(
-                            Icons.Default.Logout,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = Color(0xFFEF5350)
-                        )
+                        Icon(Icons.Default.Logout, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color(0xFFEF5350))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Déconnexion",
-                            color = Color(0xFFEF5350),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                        Text("Déconnexion", color = Color(0xFFEF5350), fontSize = 13.sp, fontWeight = FontWeight.Medium)
                     }
                 }
             }
         }
 
-        // Statistiques cliquables
+        // Stats (simplifié)
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
             shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(2.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
-            )
+            elevation = CardDefaults.cardElevation(2.dp)
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                StatItemAdminClickable(
-                    count = stats.totalSignalements,
-                    label = "Total",
-                    color = Color(0xFF1A237E),
-                    isSelected = selectedFilter == null,
-                    onClick = { selectedFilter = null }
-                )
-                StatItemAdminClickable(
-                    count = stats.enAttente,
-                    label = "En attente",
-                    color = Color(0xFFFFA726),
-                    isSelected = selectedFilter == "EN_ATTENTE",
-                    onClick = {
-                        selectedFilter = if (selectedFilter == "EN_ATTENTE") null else "EN_ATTENTE"
-                    }
-                )
-                StatItemAdminClickable(
-                    count = stats.enCours,
-                    label = "En cours",
-                    color = Color(0xFF42A5F5),
-                    isSelected = selectedFilter == "EN_COURS",
-                    onClick = {
-                        selectedFilter = if (selectedFilter == "EN_COURS") null else "EN_COURS"
-                    }
-                )
-                StatItemAdminClickable(
-                    count = stats.resolus,
-                    label = "Résolus",
-                    color = Color(0xFF66BB6A),
-                    isSelected = selectedFilter == "RESOLU",
-                    onClick = {
-                        selectedFilter = if (selectedFilter == "RESOLU") null else "RESOLU"
-                    }
-                )
+                StatItemAdminClickable(stats.totalSignalements, "Total", Color(0xFF1A237E), selectedFilter == null) { selectedFilter = null }
+                StatItemAdminClickable(stats.enAttente, "En attente", Color(0xFFFFA726), selectedFilter == "EN_ATTENTE") {
+                    selectedFilter = if (selectedFilter == "EN_ATTENTE") null else "EN_ATTENTE"
+                }
+                StatItemAdminClickable(stats.enCours, "En cours", Color(0xFF42A5F5), selectedFilter == "EN_COURS") {
+                    selectedFilter = if (selectedFilter == "EN_COURS") null else "EN_COURS"
+                }
+                StatItemAdminClickable(stats.resolus, "Résolus", Color(0xFF66BB6A), selectedFilter == "RESOLU") {
+                    selectedFilter = if (selectedFilter == "RESOLU") null else "RESOLU"
+                }
             }
         }
 
+        // Filtre actif
         if (selectedFilter != null) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -219,106 +143,63 @@ fun AdminHomeScreen(
                             color = Color(0xFF1A237E),
                             fontWeight = FontWeight.Medium
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        IconButton(
-                            onClick = { selectedFilter = null },
-                            modifier = Modifier.size(20.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.Close,
-                                contentDescription = "Supprimer filtre",
-                                modifier = Modifier.size(14.dp),
-                                tint = Color(0xFF1A237E)
-                            )
+                        IconButton(onClick = { selectedFilter = null }, modifier = Modifier.size(20.dp)) {
+                            Icon(Icons.Default.Close, contentDescription = "Supprimer filtre", modifier = Modifier.size(14.dp), tint = Color(0xFF1A237E))
                         }
                     }
                 }
-                Text(
-                    text = "${filteredSignalements.size} signalement(s)",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
+                Text(text = "${filteredSignalements.size} signalement(s)", fontSize = 12.sp, color = Color.Gray)
             }
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        TabRow(
-            selectedTabIndex = selectedTab,
-            containerColor = Color.White
-        ) {
+        // TabRow
+        TabRow(selectedTabIndex = selectedTab, containerColor = Color.White) {
             tabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
                     onClick = { selectedTab = index },
-                    text = {
-                        Text(
-                            text = title,
-                            fontSize = 13.sp,
-                            fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
-                        )
-                    }
+                    text = { Text(title, fontSize = 13.sp, fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal) }
                 )
             }
         }
 
+        // Contenu
         when (selectedTab) {
             0 -> {
                 if (isLoadingSignalements) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            CircularProgressIndicator(color = Color(0xFF1A237E))
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Chargement des signalements...", color = Color.Gray)
-                        }
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = Color(0xFF1A237E))
                     }
                 } else {
                     AdminSignalementsList(
                         signalements = filteredSignalements,
-                        onUpdateStatut = { signalement, statut ->
-                            viewModel.updateStatut(signalement, statut)
-                        },
+                        onUpdateStatut = { signalement, statut -> viewModel.updateStatut(signalement, statut) },
                         onCommentairesClick = { signalement ->
                             selectedSignalement = signalement
                             viewModel.chargerCommentaires(signalement.id!!)
                             showCommentairesDialog = true
                         },
-                        onDeleteClick = { signalement ->  // ✅ AJOUT
-                            viewModel.deleteSignalement(signalement)
+                        onDeleteClick = { signalement -> viewModel.deleteSignalement(signalement) },
+                        onAssignClick = { signalement ->
+                            selectedSignalementForAssign = signalement
+                            selectedAgentId = null
+                            showAssignDialog = true
                         }
                     )
                 }
             }
             1 -> {
                 if (isLoadingUsers) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            CircularProgressIndicator(color = Color(0xFF1A237E))
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Chargement des utilisateurs...", color = Color.Gray)
-                        }
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = Color(0xFF1A237E))
                     }
                 } else {
                     AdminUsersList(
                         users = viewModel.users,
-                        onUpdateRole = { user, role ->
-                            viewModel.updateRole(user, role)
-                        },
-                        onToggleStatus = { user ->
-                            viewModel.toggleUserStatus(user)
-                        },
-                        onDeleteUser = { user ->
-                            viewModel.deleteUser(user)
-                        },
+                        onUpdateRole = { user, role -> viewModel.updateRole(user, role) },
+                        onToggleStatus = { user -> viewModel.toggleUserStatus(user) },
+                        onDeleteUser = { user -> viewModel.deleteUser(user) },
                         onCreateUser = { nom, prenom, email, password, telephone ->
                             viewModel.createUser(nom, prenom, email, password, telephone)
                         }
@@ -328,7 +209,7 @@ fun AdminHomeScreen(
         }
     }
 
-    // Dialog des commentaires
+    // Dialog commentaires
     if (showCommentairesDialog && selectedSignalement != null) {
         CommentairesDialog(
             signalementId = selectedSignalement!!.id!!,
@@ -338,15 +219,9 @@ fun AdminHomeScreen(
             onAjouterCommentaire = { contenu, estJustification ->
                 viewModel.ajouterCommentaire(selectedSignalement!!.id!!, contenu, estJustification)
             },
-            onSupprimerCommentaire = { commentaireId ->
-                viewModel.supprimerCommentaire(commentaireId)
-            },
-            onMarquerCommeLu = { commentaireId ->
-                viewModel.marquerCommeLu(commentaireId)
-            },
-            onMarquerTousCommeLus = {
-                viewModel.marquerTousCommeLus(selectedSignalement!!.id!!)
-            },
+            onSupprimerCommentaire = { commentaireId -> viewModel.supprimerCommentaire(commentaireId) },
+            onMarquerCommeLu = { commentaireId -> viewModel.marquerCommeLu(commentaireId) },
+            onMarquerTousCommeLus = { viewModel.marquerTousCommeLus(selectedSignalement!!.id!!) },
             onDismiss = {
                 showCommentairesDialog = false
                 selectedSignalement = null
@@ -354,7 +229,57 @@ fun AdminHomeScreen(
         )
     }
 
-    // ✅ DIALOG PROFIL - CHANGER MOT DE PASSE
+    // Dialog assignation
+    if (showAssignDialog && selectedSignalementForAssign != null) {
+        AlertDialog(
+            onDismissRequest = { showAssignDialog = false },
+            title = { Text("Assigner un agent") },
+            text = {
+                Column {
+                    Text("Sélectionnez un agent pour ce signalement :")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    if (viewModel.isLoadingAgents.value) {
+                        CircularProgressIndicator()
+                    } else if (viewModel.agents.isEmpty()) {
+                        Text("Aucun agent disponible")
+                    } else {
+                        viewModel.agents.forEach { agent ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth().clickable { selectedAgentId = agent.id }.padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = selectedAgentId == agent.id,
+                                    onClick = { selectedAgentId = agent.id }
+                                )
+                                Text("${agent.prenom} ${agent.nom} (${agent.email})")
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (selectedAgentId != null) {
+                            viewModel.assignerAgent(selectedSignalementForAssign!!, selectedAgentId!!)
+                            showAssignDialog = false
+                        }
+                    },
+                    enabled = selectedAgentId != null && !viewModel.isLoadingAgents.value
+                ) {
+                    Text("Assigner")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAssignDialog = false }) {
+                    Text("Annuler")
+                }
+            }
+        )
+    }
+
+    // Dialog profil
     if (showProfileDialog) {
         ChangePasswordDialog(
             viewModel = viewModel,
@@ -362,29 +287,19 @@ fun AdminHomeScreen(
         )
     }
 
-    // Dialog de confirmation de déconnexion
+    // Dialog déconnexion
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            title = {
-                Text(
-                    text = "Déconnexion",
-                    color = Color(0xFF1A237E),
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Text("Êtes-vous sûr de vouloir vous déconnecter ?")
-            },
+            title = { Text("Déconnexion", color = Color(0xFF1A237E), fontWeight = FontWeight.Bold) },
+            text = { Text("Êtes-vous sûr de vouloir vous déconnecter ?") },
             confirmButton = {
                 Button(
                     onClick = {
                         showLogoutDialog = false
                         onLogout()
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFEF5350)
-                    )
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF5350))
                 ) {
                     Text("Se déconnecter", color = Color.White)
                 }
@@ -398,7 +313,7 @@ fun AdminHomeScreen(
     }
 }
 
-// ✅ COMPOSANT STATISTIQUES CLIQUABLE
+// Composant statistiques (simplifié)
 @Composable
 fun StatItemAdminClickable(
     count: Int,
@@ -417,32 +332,17 @@ fun StatItemAdminClickable(
             )
             .padding(horizontal = 10.dp, vertical = 6.dp)
     ) {
-        Text(
-            text = count.toString(),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (isSelected) color else color.copy(alpha = 0.5f)
-        )
-        Text(
-            text = label,
-            fontSize = 9.sp,
-            color = if (isSelected) color else Color.Gray,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-        )
+        Text(text = count.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = if (isSelected) color else color.copy(alpha = 0.5f))
+        Text(text = label, fontSize = 9.sp, color = if (isSelected) color else Color.Gray, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium)
         if (isSelected) {
-            Box(
-                modifier = Modifier
-                    .width(20.dp)
-                    .height(3.dp)
-                    .background(color, RoundedCornerShape(2.dp))
-            )
+            Box(modifier = Modifier.width(20.dp).height(3.dp).background(color, RoundedCornerShape(2.dp)))
         } else {
             Spacer(modifier = Modifier.height(3.dp))
         }
     }
 }
 
-// ✅ DIALOG CHANGER MOT DE PASSE
+// Dialog changement de passe (simplifié)
 @Composable
 fun ChangePasswordDialog(
     viewModel: AdminViewModel,
@@ -468,26 +368,13 @@ fun ChangePasswordDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    Icons.Default.Lock,
-                    contentDescription = null,
-                    tint = Color(0xFF1A237E)
-                )
-                Text(
-                    text = "Changer le mot de passe",
-                    color = Color(0xFF1A237E),
-                    fontWeight = FontWeight.Bold
-                )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFF1A237E))
+                Text("Changer le mot de passe", color = Color(0xFF1A237E), fontWeight = FontWeight.Bold)
             }
         },
         text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = oldPassword,
                     onValueChange = { oldPassword = it },
@@ -497,7 +384,6 @@ fun ChangePasswordDialog(
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp)
                 )
-
                 OutlinedTextField(
                     value = newPassword,
                     onValueChange = { newPassword = it },
@@ -507,7 +393,6 @@ fun ChangePasswordDialog(
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp)
                 )
-
                 OutlinedTextField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
@@ -517,36 +402,15 @@ fun ChangePasswordDialog(
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp)
                 )
-
                 if (errorMessage != null) {
-                    Text(
-                        text = errorMessage ?: "",
-                        color = Color(0xFFEF5350),
-                        fontSize = 13.sp
-                    )
+                    Text(text = errorMessage!!, color = Color(0xFFEF5350), fontSize = 13.sp)
                 }
-
                 if (showSuccess) {
-                    Surface(
-                        color = Color(0xFFE8F5E9),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "✅ Mot de passe changé avec succès !",
-                            color = Color(0xFF2E7D32),
-                            modifier = Modifier.padding(12.dp),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                    Surface(color = Color(0xFFE8F5E9), shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        Text("✅ Mot de passe changé avec succès !", color = Color(0xFF2E7D32), modifier = Modifier.padding(12.dp), fontSize = 13.sp, fontWeight = FontWeight.Medium)
                     }
                 }
-
-                Text(
-                    text = "Le mot de passe doit contenir au moins 6 caractères",
-                    fontSize = 11.sp,
-                    color = Color.Gray
-                )
+                Text("Le mot de passe doit contenir au moins 6 caractères", fontSize = 11.sp, color = Color.Gray)
             }
         },
         confirmButton = {
@@ -579,21 +443,12 @@ fun ChangePasswordDialog(
                         }
                     }
                 },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1A237E)
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A237E)),
                 enabled = !isLoading && !showSuccess
             ) {
                 if (isLoading) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            color = Color.White,
-                            strokeWidth = 2.dp
-                        )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
                         Text("Changement...", color = Color.White)
                     }
                 } else {
@@ -602,10 +457,7 @@ fun ChangePasswordDialog(
             }
         },
         dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                enabled = !isLoading
-            ) {
+            TextButton(onClick = onDismiss, enabled = !isLoading) {
                 Text("Annuler")
             }
         }

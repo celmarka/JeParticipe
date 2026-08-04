@@ -25,7 +25,8 @@ fun AdminSignalementsList(
     signalements: List<Signalement>,
     onUpdateStatut: (Signalement, String) -> Unit,
     onCommentairesClick: (Signalement) -> Unit,
-    onDeleteClick: (Signalement) -> Unit  // ✅ AJOUT
+    onDeleteClick: (Signalement) -> Unit,
+    onAssignClick: (Signalement) -> Unit
 ) {
     var searchText by remember { mutableStateOf("") }
     var sortByDate by remember { mutableStateOf(true) }
@@ -50,7 +51,6 @@ fun AdminSignalementsList(
             .fillMaxSize()
             .padding(12.dp)
     ) {
-        // Barre de recherche
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -59,33 +59,13 @@ fun AdminSignalementsList(
             OutlinedTextField(
                 value = searchText,
                 onValueChange = { searchText = it },
-                modifier = Modifier
-                    .weight(1f)
-                    .height(56.dp),
-                placeholder = {
-                    Text(
-                        text = "Rechercher un signalement...",
-                        fontSize = 14.sp
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Search,
-                        contentDescription = "Rechercher",
-                        modifier = Modifier.size(20.dp)
-                    )
-                },
+                modifier = Modifier.weight(1f).height(56.dp),
+                placeholder = { Text("Rechercher un signalement...", fontSize = 14.sp) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Rechercher", modifier = Modifier.size(20.dp)) },
                 trailingIcon = {
                     if (searchText.isNotEmpty()) {
-                        IconButton(
-                            onClick = { searchText = "" },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.Close,
-                                contentDescription = "Effacer",
-                                modifier = Modifier.size(18.dp)
-                            )
+                        IconButton(onClick = { searchText = "" }, modifier = Modifier.size(32.dp)) {
+                            Icon(Icons.Default.Close, contentDescription = "Effacer", modifier = Modifier.size(18.dp))
                         }
                     }
                 },
@@ -125,83 +105,36 @@ fun AdminSignalementsList(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "📋 Signalements",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF1A237E),
-                fontSize = 15.sp
-            )
-            Text(
-                text = "${sortedSignalements.size} signalement(s)",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray,
-                fontSize = 12.sp
-            )
+            Text("📋 Signalements", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = Color(0xFF1A237E), fontSize = 15.sp)
+            Text("${sortedSignalements.size} signalement(s)", style = MaterialTheme.typography.bodySmall, color = Color.Gray, fontSize = 12.sp)
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
         if (sortedSignalements.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Surface(
-                        modifier = Modifier.size(80.dp),
-                        shape = RoundedCornerShape(50),
-                        color = Color(0xFFE8EAF6)
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = if (searchText.isNotEmpty()) "🔍" else "📭",
-                                fontSize = 40.sp
-                            )
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Surface(modifier = Modifier.size(80.dp), shape = RoundedCornerShape(50), color = Color(0xFFE8EAF6)) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(text = if (searchText.isNotEmpty()) "🔍" else "📭", fontSize = 40.sp)
                         }
                     }
-                    Text(
-                        text = if (searchText.isNotEmpty()) "Aucun résultat" else "Aucun signalement",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A237E)
-                    )
+                    Text(if (searchText.isNotEmpty()) "Aucun résultat" else "Aucun signalement", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFF1A237E))
                     if (searchText.isNotEmpty()) {
-                        Text(
-                            text = "Aucun signalement ne correspond à votre recherche",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray,
-                            textAlign = TextAlign.Center
-                        )
+                        Text("Aucun signalement ne correspond à votre recherche", style = MaterialTheme.typography.bodyMedium, color = Color.Gray, textAlign = TextAlign.Center)
                     }
                 }
             }
         } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(sortedSignalements) { signalement ->
-                    AnimatedVisibility(
-                        visible = true,
-                        enter = fadeIn() + slideInVertically()
-                    ) {
+                    AnimatedVisibility(visible = true, enter = fadeIn() + slideInVertically()) {
                         AdminSignalementCard(
                             signalement = signalement,
-                            onUpdateStatut = { statut ->
-                                onUpdateStatut(signalement, statut)
-                            },
-                            onCommentairesClick = {
-                                onCommentairesClick(signalement)
-                            },
-                            onDeleteClick = {  // ✅ AJOUT
-                                onDeleteClick(signalement)
-                            }
+                            onUpdateStatut = { statut -> onUpdateStatut(signalement, statut) },
+                            onCommentairesClick = { onCommentairesClick(signalement) },
+                            onDeleteClick = { onDeleteClick(signalement) },
+                            onAssignClick = { onAssignClick(signalement) }
                         )
                     }
                 }

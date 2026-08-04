@@ -28,6 +28,7 @@ class AdminViewModel(
 
     val signalements = mutableStateListOf<Signalement>()
     val users = mutableStateListOf<User>()
+    val agents = mutableStateListOf<User>()
     val isLoadingSignalements = mutableStateOf(false)
     val isLoadingUsers = mutableStateOf(false)
     val errorMessage = mutableStateOf<String?>(null)
@@ -35,8 +36,42 @@ class AdminViewModel(
 
     // ============ COMMENTAIRES ============
     val commentaires = mutableStateListOf<Commentaire>()
+    val isLoadingAgents = mutableStateOf(false)
     val isLoadingCommentaires = mutableStateOf(false)
     val selectedSignalementId = mutableStateOf<Long?>(null)
+
+    // Assignation et liste agents
+    // ✅ NOUVEAU : charger les agents
+    fun chargerAgents() {
+        viewModelScope.launch {
+            isLoadingAgents.value = true
+            try {
+                val result = repository.getAgents()
+                agents.clear()
+                agents.addAll(result)
+            } catch (e: Exception) {
+                errorMessage.value = e.message
+            } finally {
+                isLoadingAgents.value = false
+            }
+        }
+    }
+
+    // ✅ NOUVEAU : assigner un agent à un signalement
+    fun assignerAgent(signalement: Signalement, agentId: Long) {
+        viewModelScope.launch {
+            try {
+                val id = signalement.id ?: return@launch
+                val updated = repository.assignerAgent(id, agentId)
+                val index = signalements.indexOfFirst { it.id == id }
+                if (index != -1) signalements[index] = updated
+                successMessage.value = "✅ Agent assigné avec succès"
+                chargerSignalements()
+            } catch (e: Exception) {
+                errorMessage.value = e.message
+            }
+        }
+    }
 
     // ============ SIGNALEMENTS ============
     fun chargerSignalements() {

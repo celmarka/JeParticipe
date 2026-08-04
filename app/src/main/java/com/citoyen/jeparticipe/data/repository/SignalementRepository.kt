@@ -171,7 +171,7 @@ class SignalementRepository(
         }
     }
 
-    // ✅ Supprimer un signalement
+    // Supprimer un signalement
     suspend fun deleteSignalement(id: Long) {
         return try {
             apiService.deleteSignalement(id)
@@ -179,8 +179,24 @@ class SignalementRepository(
             throw Exception("Impossible de supprimer le signalement: ${e.message}")
         }
     }
+    //Assignation de signalement
+    suspend fun assignerAgent(signalementId: Long, agentId: Long): Signalement {
+        return try {
+            apiService.assignerAgent(signalementId, mapOf("agentId" to agentId))
+        } catch (e: Exception) {
+            throw Exception("Impossible d'assigner l'agent: ${e.message}")
+        }
+    }
 
-    // ✅ Changer le mot de passe
+    suspend fun getAgents(): List<User> {
+        return try {
+            apiService.getAgents()
+        } catch (e: Exception) {
+            throw Exception("Impossible de charger les agents: ${e.message}")
+        }
+    }
+
+    //  Changer le mot de passe
     suspend fun changePassword(oldPassword: String, newPassword: String): Boolean {
         return try {
             val response = apiService.changePassword(
@@ -190,7 +206,7 @@ class SignalementRepository(
                 )
             )
             // Si on arrive ici, c'est que la requête a réussi
-            println("✅ Mot de passe changé avec succès pour: ${response.email}")
+            println(" Mot de passe changé avec succès pour: ${response.email}")
             true
         } catch (e: HttpException) {
             // Erreur HTTP (401, 400, 500, etc.)

@@ -34,6 +34,10 @@ data class Signalement(
     @SerializedName("dateCreation")
     val dateCreation: String? = null,
 
-    @SerializedName("citoyen")  // ✅ AJOUTER CE CHAMP
-    val citoyen: User? = null
+    @SerializedName("citoyen")
+    val citoyen: User? = null,
+    @SerializedName("agent")
+    val agent: User? = null,
+    @SerializedName("agentId")
+    val agentId: Long? = null
 )

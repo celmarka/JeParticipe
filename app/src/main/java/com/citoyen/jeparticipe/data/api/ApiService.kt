@@ -111,6 +111,15 @@ interface ApiService {
     suspend fun countCommentairesNonLus(
         @Path("signalementId") signalementId: Long
     ): Long
+    // Assignation
+    @PUT("api/signalements/{id}/assigner")
+    suspend fun assignerAgent(
+        @Path("id") id: Long,
+        @Body request: Map<String, Long>
+    ): Signalement
+
+    @GET("api/users/agents")
+    suspend fun getAgents(): List<User>
 
     // ✅ AJOUT : Enregistrer le token FCM
     @PUT("api/users/fcm-token")

@@ -21,16 +21,24 @@ class AgentSignalementViewModel(
     private val allSignalements = mutableStateListOf<Signalement>()
     val isLoading = mutableStateOf(false)
 
-    // État pour la recherche
     var searchQuery = mutableStateOf("")
-
-    // État pour le tri (true = plus récent d'abord)
     var sortByDate = mutableStateOf(true)
 
-    // ============ COMMENTAIRES ============
     val commentaires = mutableStateListOf<Commentaire>()
     val isLoadingCommentaires = mutableStateOf(false)
     val selectedSignalementId = mutableStateOf<Long?>(null)
+
+    // ✅ Récupérer l'ID à chaque fois, pas seulement dans init
+    private fun getCurrentAgentId(): Long? {
+        return authRepository.getCurrentUserId()
+    }
+
+    init {
+        viewModelScope.launch {
+            // Premier chargement
+            chargerSignalements()
+        }
+    }
 
     fun chargerSignalements() {
         viewModelScope.launch {
@@ -39,9 +47,18 @@ class AgentSignalementViewModel(
                 val result = repository.getAllSignalements()
                 allSignalements.clear()
                 allSignalements.addAll(result)
+
+                // Log pour déboguer
+                val agentId = getCurrentAgentId()
+                println("🔍 Agent ID actuel : $agentId")
+                result.forEach { sig ->
+                    println("📌 Signalement ${sig.id} : agent = ${sig.agent?.id} (${sig.agent?.nom}) | agentId = ${sig.agentId}")
+                }
+
                 applyFiltersAndSort()
             } catch (e: Exception) {
-                println("Erreur: ${e.message}")
+                println("❌ Erreur chargement signalements: ${e.message}")
+                e.printStackTrace()
             } finally {
                 isLoading.value = false
             }
@@ -58,17 +75,17 @@ class AgentSignalementViewModel(
                     if (index != -1) {
                         signalements[index] = updated
                     }
-                    chargerSignalements()
+                    chargerSignalements() // Recharger pour rafraîchir
                 } else {
                     println("⚠️ ID du signalement est null")
                 }
             } catch (e: Exception) {
-                println("❌ Erreur: ${e.message}")
+                println("❌ Erreur mise à jour statut: ${e.message}")
             }
         }
     }
 
-    // ============ MÉTHODES COMMENTAIRES ============
+    // ============ COMMENTAIRES ============
     fun chargerCommentaires(signalementId: Long) {
         viewModelScope.launch {
             isLoadingCommentaires.value = true
@@ -109,7 +126,6 @@ class AgentSignalementViewModel(
         }
     }
 
-    // ============ BADGES NON LUS ============
     fun marquerCommeLu(commentaireId: Long) {
         viewModelScope.launch {
             try {
@@ -121,7 +137,7 @@ class AgentSignalementViewModel(
                 }
                 println("✅ Commentaire marqué comme lu")
             } catch (e: Exception) {
-                println("❌ Erreur lors du marquage: ${e.message}")
+                println("❌ Erreur marquage: ${e.message}")
             }
         }
     }
@@ -135,14 +151,12 @@ class AgentSignalementViewModel(
                 }
                 println("✅ Tous les commentaires marqués comme lus")
             } catch (e: Exception) {
-                println("❌ Erreur lors du marquage: ${e.message}")
+                println("❌ Erreur marquage: ${e.message}")
             }
         }
     }
 
-// ... dans la classe, après les autres fonctions
-
-    // ✅ CHANGER LE MOT DE PASSE
+    // ============ CHANGER LE MOT DE PASSE ============
     fun changePassword(oldPassword: String, newPassword: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             try {
@@ -167,9 +181,23 @@ class AgentSignalementViewModel(
         }
     }
 
-    // Appliquer les filtres et le tri
+    // ============ FILTRAGE ET TRI ============
     private fun applyFiltersAndSort() {
         var list = allSignalements.toList()
+        val agentId = getCurrentAgentId()
+
+        // ✅ Filtrer par agent assigné (en utilisant agentId ou agent?.id)
+        if (agentId != null) {
+            list = list.filter {
+                // Vérifier si le signalement est assigné à cet agent
+                val assignedAgentId = it.agent?.id ?: it.agentId
+                assignedAgentId == agentId
+            }
+            println("📊 Après filtrage : ${list.size} signalements pour l'agent $agentId")
+        } else {
+            println("⚠️ agentId est null, aucune liste affichée")
+            list = emptyList()
+        }
 
         // Recherche par titre ou description
         if (searchQuery.value.isNotBlank()) {
@@ -188,13 +216,11 @@ class AgentSignalementViewModel(
         signalements.addAll(list)
     }
 
-    // Fonction de recherche
     fun search(query: String) {
         searchQuery.value = query
         applyFiltersAndSort()
     }
 
-    // Fonction pour changer le tri
     fun toggleSort() {
         sortByDate.value = !sortByDate.value
         applyFiltersAndSort()

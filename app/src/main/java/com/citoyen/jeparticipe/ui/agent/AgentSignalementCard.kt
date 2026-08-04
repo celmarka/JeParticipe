@@ -27,7 +27,7 @@ import androidx.compose.ui.window.Dialog
 import com.citoyen.jeparticipe.data.model.Signalement
 import com.citoyen.jeparticipe.utils.DateUtils
 
-// ✅ Fonction utilitaire pour décoder le Base64 en ImageBitmap
+// Fonction utilitaire pour décoder le Base64 en ImageBitmap
 fun decodeBase64ToImageBitmap(base64String: String?): ImageBitmap? {
     if (base64String.isNullOrEmpty()) return null
     return try {
@@ -141,7 +141,7 @@ fun AgentSignalementCard(
                     }
                 }
 
-                // AUTEUR
+                // AUTEUR (citoyen)
                 val citoyen = signalement.citoyen
                 if (citoyen != null) {
                     Row(
@@ -158,6 +158,47 @@ fun AgentSignalementCard(
                             text = "${citoyen.prenom} ${citoyen.nom}",
                             fontSize = 12.sp,
                             color = Color(0xFF1A237E),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+                // ✅ AGENT ASSIGNÉ (si présent)
+                val agent = signalement.agent
+                if (agent != null) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Shield,
+                            contentDescription = "Agent assigné",
+                            modifier = Modifier.size(14.dp),
+                            tint = Color(0xFF42A5F5)
+                        )
+                        Text(
+                            text = "Assigné à : ${agent.prenom} ${agent.nom} (${agent.email})",
+                            fontSize = 12.sp,
+                            color = Color(0xFF42A5F5),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                } else {
+                    // Optionnel : indiquer que le signalement n'est pas encore assigné
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.PersonAdd,
+                            contentDescription = "Non assigné",
+                            modifier = Modifier.size(14.dp),
+                            tint = Color(0xFFFFA726)
+                        )
+                        Text(
+                            text = "Non assigné",
+                            fontSize = 12.sp,
+                            color = Color(0xFFFFA726),
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -186,7 +227,7 @@ fun AgentSignalementCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Boutons actions (inchangés)
+            // Boutons actions selon statut
             when (signalement.statut?.uppercase()) {
                 "EN_ATTENTE" -> {
                     Column(
@@ -426,7 +467,7 @@ fun AgentSignalementCard(
         }
     }
 
-    // ✅ Dialog des détails avec photo
+    // Dialog des détails
     if (showDetailsDialog) {
         AgentSignalementDetailsDialog(
             signalement = signalement,
@@ -435,7 +476,7 @@ fun AgentSignalementCard(
     }
 }
 
-// ✅ Dialog des détails POUR AGENT (avec affichage de la photo)
+// ✅ Dialog des détails POUR AGENT avec affichage de l'agent
 @Composable
 fun AgentSignalementDetailsDialog(
     signalement: Signalement,
@@ -503,6 +544,14 @@ fun AgentSignalementDetailsDialog(
                     )
                     HorizontalDivider()
 
+                    // ✅ Affichage de l'agent assigné dans les détails
+                    val agent = signalement.agent
+                    DetailRowAgent(
+                        label = "Agent assigné",
+                        value = if (agent != null) "${agent.prenom} ${agent.nom} (${agent.email})" else "Aucun agent assigné"
+                    )
+                    HorizontalDivider()
+
                     DetailRowAgent(
                         label = "Latitude",
                         value = signalement.latitude?.toString() ?: "Non spécifiée"
@@ -528,7 +577,7 @@ fun AgentSignalementDetailsDialog(
                         HorizontalDivider()
                     }
 
-                    // ✅ AFFICHAGE DE LA PHOTO
+                    // Photo
                     if (!signalement.photo.isNullOrEmpty()) {
                         val imageBitmap = decodeBase64ToImageBitmap(signalement.photo)
                         if (imageBitmap != null) {

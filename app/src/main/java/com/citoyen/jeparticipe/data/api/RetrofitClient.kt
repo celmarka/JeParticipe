@@ -9,7 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-    private const val BASE_URL = "http://192.168.1.107 :8081/"
+    private const val BASE_URL = "http://192.168.1.39:8081/"
 
     // API sans authentification
     val apiService: ApiService by lazy {
